@@ -52,7 +52,20 @@ if ($iCacheMemory + 500 > getTotalMemoryMB()) {
     $iCacheMemory = getCacheMemoryMB();
     echo "WARNING: resetting cache memory to $iCacheMemory\n";
 }
-$sOsm2pgsqlCmd = CONST_Osm2pgsql_Binary.' -klas --number-processes 1 -C '.$iCacheMemory.' -O gazetteer -d '.$aDSNInfo['database'].' -P '.$aDSNInfo['port'];
+//$sOsm2pgsqlCmd = CONST_Osm2pgsql_Binary.' -klas --number-processes 1 -C '.$iCacheMemory.' -O gazetteer -d '.$aDSNInfo['database'].' -P '.$aDSNInfo['port'];
+//$sCMD = sprintf('PGPASSWORD=%s psql -h -p %s -d %s -h %s -U %s', $aDSNInfo['password'], $aDSNInfo['port'], $aDSNInfo['database'], $aDSNInfo['hostspec'], $aDSNInfo['username']);
+$sOsm2pgsqlCmd = sprintf(
+'PGPASSWORD=%s %s  -klas --number-processes 1 -C %s  -O gazetteer -d %s -P %s -H %s -U %s',
+$aDSNInfo['password'],
+CONST_Osm2pgsql_Binary,
+$iCacheMemory,
+$aDSNInfo['database'],
+$aDSNInfo['port'],
+$aDSNInfo['hostspec'],
+$aDSNInfo['username']
+);
+
+$iCacheMemory
 if (!is_null(CONST_Osm2pgsql_Flatnode_File)) {
     $sOsm2pgsqlCmd .= ' --flat-nodes '.CONST_Osm2pgsql_Flatnode_File;
 }

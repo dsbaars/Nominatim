@@ -168,6 +168,19 @@ if ($aCMDResult['import-data'] || $aCMDResult['all']) {
         fail("osm2pgsql not found in '$osm2pgsql'");
     }
 
+
+    $osm2pgsql = sprintf(
+        'PGPASSWORD=%s %s -C %s  -d %s -P %s -H %s -U %s',
+        $aDSNInfo['password'],
+        CONST_Osm2pgsql_Binary,
+        $iCacheMemory,
+        $aDSNInfo['database'],
+        $aDSNInfo['port'],
+        $aDSNInfo['hostspec'],
+        $aDSNInfo['username']
+    );
+
+
     if (!is_null(CONST_Osm2pgsql_Flatnode_File)) {
         $osm2pgsql .= ' --flat-nodes '.CONST_Osm2pgsql_Flatnode_File;
     }
@@ -180,9 +193,8 @@ if ($aCMDResult['import-data'] || $aCMDResult['all']) {
     if (CONST_Tablespace_Place_Index)
         $osm2pgsql .= ' --tablespace-main-index '.CONST_Tablespace_Place_Index;
     $osm2pgsql .= ' -lsc -O gazetteer --hstore --number-processes 1';
-    $osm2pgsql .= ' -C '.$iCacheMemory;
-    $osm2pgsql .= ' -P '.$aDSNInfo['port'];
-    $osm2pgsql .= ' -d '.$aDSNInfo['database'].' '.$aCMDResult['osm-file'];
+
+    $osm2pgsql .= ' ' . $aCMDResult['osm-file'];
     passthruCheckReturn($osm2pgsql);
 
     $oDB =& getDB();
@@ -694,7 +706,7 @@ function pgsqlRunScriptFile($sFilename)
     // Convert database DSN to psql parameters
     $aDSNInfo = DB::parseDSN(CONST_Database_DSN);
     if (!isset($aDSNInfo['port']) || !$aDSNInfo['port']) $aDSNInfo['port'] = 5432;
-    $sCMD = 'psql -p '.$aDSNInfo['port'].' -d '.$aDSNInfo['database'];
+    $sCMD = sprintf('PGPASSWORD=%s psql -h -p %s -d %s -h %s -U %s', $aDSNInfo['password'], $aDSNInfo['port'], $aDSNInfo['database'], $aDSNInfo['hostspec'], $aDSNInfo['username']);
 
     $ahGzipPipes = null;
     if (preg_match('/\\.gz$/', $sFilename)) {
@@ -744,7 +756,8 @@ function pgsqlRunScript($sScript, $bfatal = true)
     // Convert database DSN to psql parameters
     $aDSNInfo = DB::parseDSN(CONST_Database_DSN);
     if (!isset($aDSNInfo['port']) || !$aDSNInfo['port']) $aDSNInfo['port'] = 5432;
-    $sCMD = 'psql -p '.$aDSNInfo['port'].' -d '.$aDSNInfo['database'];
+    $sCMD = sprintf('PGPASSWORD=%s psql -h -p %s -d %s -h %s -U %s', $aDSNInfo['password'], $aDSNInfo['port'], $aDSNInfo['database'], $aDSNInfo['hostspec'], $aDSNInfo['username']);
+
     if ($bfatal && !$aCMDResult['ignore-errors'])
         $sCMD .= ' -v ON_ERROR_STOP=1';
     $aDescriptors = array(
